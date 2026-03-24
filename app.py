@@ -34,6 +34,7 @@ def home():
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     html = f"""
+    <meta http-equiv="refresh" content="10">
     <h2>📊 Báo cáo trạng thái EC2</h2>
     <p>⏰ Thời gian: {now}</p>
     <table border="1" cellpadding="8">
