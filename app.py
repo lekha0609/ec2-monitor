@@ -30,35 +30,42 @@ def get_ec2():
 @app.route("/")
 def home():
     data = get_ec2()
-
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     html = f"""
-    <meta http-equiv="refresh" content="10">
-    <h2>📊 Báo cáo trạng thái EC2</h2>
-    <p>⏰ Thời gian: {now}</p>
-    <table border="1" cellpadding="8">
-        <tr>
-            <th>Tên</th>
-            <th>Instance ID</th>
-            <th>Trạng thái</th>
-        </tr>
+    <html>
+    <head>
+        <meta http-equiv="refresh" content="10">
+        <title>EC2 Monitor</title>
+    </head>
+    <body>
+        <h2>📊 Báo cáo trạng thái EC2</h2>
+        <p>⏰ Thời gian: {now}</p>
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>Tên</th>
+                <th>Instance ID</th>
+                <th>Trạng thái</th>
+            </tr>
     """
 
     for i in data:
         color = "green" if i['state'] == "running" else "red"
-
         trangthai = "🟢 Đang chạy" if i['state'] == "running" else "🔴 Đã dừng"
 
         html += f"""
-        <tr>
-            <td>{i['name']}</td>
-            <td>{i['id']}</td>
-            <td style='color:{color}'>{trangthai}</td>
-        </tr>
+            <tr>
+                <td>{i['name']}</td>
+                <td>{i['id']}</td>
+                <td style='color:{color}'>{trangthai}</td>
+            </tr>
         """
 
-    html += "</table>"
+    html += """
+        </table>
+    </body>
+    </html>
+    """
 
     return html
 
