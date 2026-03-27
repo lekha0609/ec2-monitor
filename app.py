@@ -3,8 +3,6 @@ import boto3
 from datetime import datetime, timedelta, timezone
 import json
 import os
-import matplotlib.pyplot as plt
-import io
 
 app = Flask(__name__)
 
@@ -51,55 +49,15 @@ def get_ec2():
 
     return all_data
 
-# ===== COST =====
-# def get_cost_month():
-#     try:
-#         ce = boto3.client("ce")
-#         today = date.today()
+# ===== LOG =====
+def save_log(data):
+    with open("log.txt", "a", encoding="utf-8") as f:
+        f.write(f"{now()} - {data}\n")
 
-#         start = today.replace(day=1).strftime("%Y-%m-%d")
-#         end = today.strftime("%Y-%m-%d")
-
-#         res = ce.get_cost_and_usage(
-#             TimePeriod={"Start": start, "End": end},
-#             Granularity="MONTHLY",
-#             Metrics=["UnblendedCost"]
-#         )
-
-#         return round(float(res["ResultsByTime"][0]["Total"]["UnblendedCost"]["Amount"]), 4)
-#     except:
-#         return 0
-
-# ===== COST 7 DAYS =====
-# def get_cost_7days():
-#     try:
-#         ce = boto3.client("ce")
-
-#         end = date.today()
-#         start = (end - timedelta(days=7)).strftime("%Y-%m-%d")
-#         end = end.strftime("%Y-%m-%d")
-
-#         res = ce.get_cost_and_usage(
-#             TimePeriod={"Start": start, "End": end},
-#             Granularity="DAILY",
-#             Metrics=["UnblendedCost"]
-#         )
-
-#         dates, costs = [], []
-
-#         for d in res["ResultsByTime"]:
-#             dates.append(d["TimePeriod"]["Start"])
-#             costs.append(float(d["Total"]["UnblendedCost"]["Amount"]))
-
-#         return dates, costs
-#     except:
-#         return [], []
-
-# ===== CHART =====
-
-@app.route("/chart")
-def chart():
-    return "Chart disabled"
+def read_log():
+    if not os.path.exists("log.txt"):
+        return "Chưa có log"
+    return open("log.txt", encoding="utf-8").read()
 
 # ===== STATE =====
 STATE_FILE = "state.json"
@@ -112,7 +70,7 @@ def load_state():
 def save_state(state):
     json.dump(state, open(STATE_FILE, "w"))
 
-# ===== ALERT =====
+# ===== ALERT ===== (giảm spam)
 def send_alert(old, new):
     try:
         sns = boto3.client("sns")
@@ -140,7 +98,6 @@ def send_alert(old, new):
 @app.route("/")
 def home():
     data = get_ec2()
-    # cost = get_cost_month()
 
     old = load_state().get("ec2", [])
 
@@ -149,16 +106,11 @@ def home():
     save_log(data)
 
     html = f"""
-    <meta http-equiv="refresh" content="10">
+    <meta http-equiv="refresh" content="60">
     <meta http-equiv="Cache-Control" content="no-cache">
 
     <h2>📊 CloudOps Multi-Region Dashboard</h2>
     <p>⏰ {now()}</p>
-
-    
-
-    <h3>📈 Biểu đồ</h3>
-    <img src="/chart">
 
     <h3>🖥️ EC2</h3>
     <table border="1" cellpadding="8">
